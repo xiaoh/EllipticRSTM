@@ -1,43 +1,51 @@
-Implementation of two RSTM with elliptic relaxation models:
+Implementation of two RSTM with elliptic relaxation models
+==========================================================
+Heng Xiao <xiaoheng2011@gmail.com>
 
-Durbin Elliptic Relaxation Model (Durbin 1993)
-and 
-Hanjalic Elliptic Blending Model (Manceau & Hanjalic, 2002)
+Implementation: Heng Xiao +
+Review: Michael Wild +
+Bug reports and comments to: Heng Xiao
 
-Both inherited from a virtual abstract "GenElliptic".  Both can choose
-LRR or SSG as the homogenous model. However, SSG has not been fully
-tested. LRR is the default.  Durbin model also has the option of
-applying the elliptic operator correction by Manceau et al (see
-below).  This is invoked by setting ellipticOperatorCorrection to be
-true.
+The following RSTM models are implemented:
 
-This distribution also comes with a solver "channelPisoFoam" for the
-computationa of channel flow with fixed mass flux. The solver is
-derived from channelFoam, but can use RANS as turbulence model. The
-turbulece models, however, can be used with any solver.
+`Durbin`::
+  Durbin Elliptic Relaxation Model <<Durbin1993>>
+`ManceauHanjalic`::
+  Hanjalic Elliptic Blending Model <<Manceau2002>>
 
-An example case, Re395 channel, is also included.  
+Both classes inherit from the abstract base class `GenElliptic`. Both can
+choose 'LRR' or 'SSG' as the homogenous model. However, 'SSG' has not been
+fully tested. 'LRR' is the default. The `Durbin` model also has the option of
+applying the elliptic operator correction by Manceau et al <<Manceau2001>>.
+This is invoked by setting `ellipticOperatorCorrection` to be 'true'.
 
-To compile: ./Allwmake
-To run: cd channel395-Durbin-example
-then: channelPisoFoam
+This distribution also comes with a solver `channelPisoFoam` for the
+computation of channel flow with fixed mass flux. The solver is derived from
+`channelFoam`, but can use RAS turbulence models. The turbulece models,
+however, can be used with any solver.
 
-References:
+An example case, the Re395 channel, is also included.
 
-    Durbin, A Reynolds stress model for near-wall turbulence, J. Fluid
-    Mech. vol 249, 1993.
+.Building the code:
+  $ ./Allwmake
 
-    Manceau and Hanjalic, Elliptic blending model: a new
-    near-wall Reynolds-stress turbulence closure. Physics of Fluids 14
-    (74), 2002.
+.Runnning the example:
+  $ blockMesh -case channel395-Durbin-example
+  $ channelPisoFoam -case channel395-Durbin-example
 
-    Manceau, Wang, and Laurence. Inhomogeneity and anisotropy effects
-    on the redistribution term in Reynolds-averaged Navier-Stokes
-    modelling. J. Fluid Mech. vol 438, 2001.
+[bibliography]
+References
+----------
 
+[bibliography]
+- [[[Durbin1993]]] Durbin, 'A Reynolds stress model for near-wall turbulence'.
+  J Fluid Mech 249, 1993. http://dx.doi.org/10.1017/S0022112093001259
 
-***************************************************;
-Implementation: Heng Xiao (xiaoheng2011@gmail.com)
-Reivew: Michael Wild
-Bug report and comments to: HX.
-***************************************************
+- [[[Manceau2002]]] Manceau and Hanjalic, 'Elliptic blending model: a new
+  near-wall Reynolds-stress turbulence closure'. Phys Fluid 14 (74), 2002.
+  http://dx.doi.org/10.1063/1.1432693
+
+- [[[Manceau2001]]] Manceau, Wang, and Laurence, 'Inhomogeneity and anisotropy
+  effects on the redistribution term in Reynolds-averaged Navier-Stokes
+  modelling'. J Fluid Mech 438, 2001.
+  http://dx.doi.org/10.1017/S0022112001004451
