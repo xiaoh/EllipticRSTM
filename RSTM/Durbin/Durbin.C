@@ -116,7 +116,7 @@ void Durbin::correct()
 
     volScalarField T_("T", T());
 
-    #include "../common/epsilonWallI.H" // set patch internal eps values
+    #include "epsilonWallI.H" // set patch internal eps values
 
     // Dissipation equation 
     tmp<fvScalarMatrix> epsEqn

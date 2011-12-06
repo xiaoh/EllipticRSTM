@@ -105,7 +105,7 @@ void ManceauHanjalic::correct()
     n /= mag(n) + dimensionedScalar("nsmall", n.dimensions(), VSMALL);
     volSymmTensorField nn = symm(n*n);
 
-    #include "../common/epsilonWallI.H" // set patch internal eps values
+    #include "epsilonWallI.H" // set patch internal eps values
 
     // weight of the homogeneous contribution of the pressure strain
     // indicating wall distance

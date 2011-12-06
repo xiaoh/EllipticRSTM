@@ -1,4 +1,5 @@
 EXE_INC = \
+    -Iinclude \
     -I$(LIB_SRC)/turbulenceModels \
     -I$(LIB_SRC)/transportModels \
     -I$(LIB_SRC)/finiteVolume/lnInclude \
