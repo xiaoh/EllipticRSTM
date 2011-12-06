@@ -1,0 +1,87 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  1.6                                   |
+|   \\  /    A nd           | Web:      www.OpenFOAM.org                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    location    "system";
+    object      fvSchemes;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+ddtSchemes
+{
+    // default         Euler;
+     default         backward;
+}
+
+gradSchemes
+{
+    default         Gauss linear;
+    grad(p)         Gauss linear;
+    grad(U)         Gauss linear;
+}
+
+divSchemes
+{
+    default        	 none;
+    div(phi,U)     	 Gauss limitedLinear 1.0;
+    div(phi,k)      	Gauss limitedLinear 1;
+    div(phi,epsilon)	Gauss limitedLinear 1;
+    div(phi,R)         	Gauss linear;
+    div(R)              Gauss linear;
+    div((nuEff*dev(grad(U).T()))) Gauss linear;
+}
+
+laplacianSchemes
+{
+    default        				 none;
+    laplacian(nuEff,U) 				 Gauss linear limited 0.333; //Gauss linear corrected;
+    laplacian(nu,U) 				 Gauss linear limited 0.333; //Gauss linear corrected;
+    laplacian((1|A(U)),p)			 Gauss linear limited 0.333; //Gauss upwind corrected;
+    laplacian(DkEff,k)				 Gauss linear limited 0.333; //Gauss upwind corrected;
+    laplacian(DepsilonEff,epsilon)		 Gauss linear limited 0.333; //Gauss upwind corrected;
+    laplacian(((((Cmu|sigmaEps)*T)*R)+(nu*(1))),epsilon) Gauss linear corrected;
+    laplacian(((((Cmu|sigmaK)*T)*R)+(nu*(1))),k) Gauss linear corrected;
+    laplacian((((Cmu*T)*R)+(nu*(1))),epsilon) Gauss linear corrected;
+    laplacian((((Cmu*T)*R)+(nu*(1))),R) Gauss linear corrected;
+    laplacian(((Cmu*T)*R),R) Gauss linear corrected;
+    laplacian(((Cmu*T)*k),k) Gauss linear corrected;
+    laplacian(DREff,R)				 Gauss linear limited 0.333; //Gauss upwind corrected;
+    laplacian(DkEff,k)				 Gauss linear limited 0.333; //Gauss upwind corrected;
+    //laplacian(DnuTildaEff,nuTilda)		 Gauss linear limited 0.333; //Gauss upwind corrected;
+    //laplacian(nuEff,U) Gauss linear corrected;
+    // laplacian((1|A(U)),p) Gauss linear corrected;
+    //laplacian(DkEff,k) Gauss linear corrected;
+    //laplacian(DepsilonEff,epsilon) Gauss linear corrected;
+    laplacian(alpha) Gauss linear corrected;
+    laplacian(f) Gauss linear corrected;
+    laplacian(L, f) Gauss linear corrected;
+
+}
+
+interpolationSchemes
+{
+    default         linear;
+    interpolate(U)  linear;
+}
+
+snGradSchemes
+{
+ default         corrected;
+}
+
+fluxRequired
+{
+    default         no;
+    p               ;
+}
+
+
+// ************************************************************************* //

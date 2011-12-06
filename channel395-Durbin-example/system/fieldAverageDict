@@ -1,0 +1,35 @@
+fieldAverage1
+   {
+    // type            fieldAverage;
+     type            flexFieldAverage;
+     // functionObjectLibs ( "libfieldFunctionObjects.so" );
+     functionObjectLibs ( "libFlexFieldAverage.so" );
+     after 0;                                                              //ATTEN\
+TION: NE PAS OUBLIER DE LE MODIFIER!!!!
+     enabled         true;
+     outputControl   outputTime;
+       fields
+         (
+          U
+          {
+            mean        on;
+            prime2Mean  on;
+            base        time;
+          }
+
+          p
+          {
+            mean        on;
+            prime2Mean  on;
+            base        time;
+          }
+
+          //          B
+          // {
+          //  mean        on;
+          //  prime2Mean  off;
+          //  base        time;
+          //  }
+
+          );
+   }

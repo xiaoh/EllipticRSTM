@@ -1,0 +1,43 @@
+Implementation of two RSTM with elliptic relaxation models:
+
+Durbin Elliptic Relaxation Model (Durbin 1993)
+and 
+Hanjalic Elliptic Blending Model (Manceau & Hanjalic, 2002)
+
+Both inherited from a virtual abstract "GenElliptic".  Both can choose
+LRR or SSG as the homogenous model. However, SSG has not been fully
+tested. LRR is the default.  Durbin model also has the option of
+applying the elliptic operator correction by Manceau et al (see
+below).  This is invoked by setting ellipticOperatorCorrection to be
+true.
+
+This distribution also comes with a solver "channelPisoFoam" for the
+computationa of channel flow with fixed mass flux. The solver is
+derived from channelFoam, but can use RANS as turbulence model. The
+turbulece models, however, can be used with any solver.
+
+An example case, Re395 channel, is also included.  
+
+To compile: ./Allwmake
+To run: cd channel395-Durbin-example
+then: channelPisoFoam
+
+References:
+
+    Durbin, A Reynolds stress model for near-wall turbulence, J. Fluid
+    Mech. vol 249, 1993.
+
+    Manceau and Hanjalic, Elliptic blending model: a new
+    near-wall Reynolds-stress turbulence closure. Physics of Fluids 14
+    (74), 2002.
+
+    Manceau, Wang, and Laurence. Inhomogeneity and anisotropy effects
+    on the redistribution term in Reynolds-averaged Navier-Stokes
+    modelling. J. Fluid Mech. vol 438, 2001.
+
+
+***************************************************;
+Implementation: Heng Xiao (xiaoheng2011@gmail.com)
+Reivew: Michael Wild
+Bug report and comments to: HX.
+***************************************************
