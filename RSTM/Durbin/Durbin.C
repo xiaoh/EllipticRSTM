@@ -218,18 +218,16 @@ void Durbin::correct()
     if(SSG_)
     {
         volSymmTensorField bij("bij", 0.5*dev(R_/k_));
-        volTensorField fbij(symm2full(bij));
         volTensorField gradU = fvc::grad(U_);
         volSymmTensorField Sij("Sij", dev(symm(gradU)));
-        volTensorField fSij(symm2full(Sij));
         volTensorField Wij = skew(gradU);
 
         exSrc =
           - (Cg1_*k_/T_ + Cg1s_*G)*bij
-          + Cg2_*k_/T_*dev(symm(fbij & fbij))
+          + Cg2_*k_/T_*dev(symm(bij & bij))
           + (Cg3_ - Cg3s_*sqrt(bij && bij))*k_*Sij
-          + Cg4_*k_*dev(twoSymm(fbij & fSij))
-          + Cg5_*k_*(twoSymm(fbij & Wij)) ;
+          + Cg4_*k_*dev(twoSymm(symm2full(bij) & Sij))
+          + Cg5_*k_*(twoSymm(bij & Wij)) ;
     }
 
 
