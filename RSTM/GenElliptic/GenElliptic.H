@@ -30,41 +30,41 @@ Description
     Examples include:
 
     Durbin Elliptic Relaxation Model.
-    
+
     Durbin, A Reynolds stress model for near-wall turbulence, J. Fluid
     Mech. vol 249, 1993.
 
-    and 
+    and
     Hanjalic Elliptic Blending Model
 
     Manceau and Hanjalic, Elliptic blending model: a new
     near-wall Reynolds-stress turbulence closure. Physics of Fluids 14
     (74), 2002.
-    
+
     The default model coefficients correspond to the following:
     @verbatim
         Coeffs
         {
-          yStarLim        5;               
-          CL              0.28;             
-          CmuKE           0.09;            
-          Clrr1           1.22;            
-          Clrr2           0.6;             
-          C1              1.44;            
-          C2              1.9;             
-          Cmu             0.23;            
-          sigmaEps        1.65;            
-          sigmaK          1.2;             
-          CEta            80;              
-          SSG             false;           
-          Cg1             3.4;             
-          Cg1s            1.8;             
-          Cg2             4.2;             
-          Cg3             0.8;             
-          Cg3s            1.3;             
-          Cg4             1.25;            
-          Cg5             0.4;             
-         }
+            yStarLim        5;
+            CL              0.28;
+            CmuKE           0.09;
+            Clrr1           1.22;
+            Clrr2           0.6;
+            C1              1.44;
+            C2              1.9;
+            Cmu             0.23;
+            sigmaEps        1.65;
+            sigmaK          1.2;
+            CEta            80;
+            SSG             false;
+            Cg1             3.4;
+            Cg1s            1.8;
+            Cg2             4.2;
+            Cg3             0.8;
+            Cg3s            1.3;
+            Cg4             1.25;
+            Cg5             0.4;
+        }
     @endverbatim
 
 SourceFiles
@@ -95,15 +95,16 @@ class GenElliptic
 :
     virtual public RASModel
 {
-    // Private member functions:
+    // Private member functions
 
     // Disallow default bitwise copy construct and assignment
-    GenElliptic(const GenElliptic&); 
-    GenElliptic& operator=(const GenElliptic&); 
+    GenElliptic(const GenElliptic&);
+    GenElliptic& operator=(const GenElliptic&);
+
+protected:
 
     //Protected data
 
-    protected:
         // Model coefficients
             const fvMesh& mesh_;
             dimensionedScalar CmuKE_;
@@ -121,7 +122,7 @@ class GenElliptic
             // coeffs related to elliptic relaxation
             dimensionedScalar CL_;
             dimensionedScalar CEta_;
-            dimensionedScalar yStarLim_; 
+            dimensionedScalar yStarLim_;
 
             // SSG model related coeffs
             const Switch  SSG_;
@@ -134,15 +135,19 @@ class GenElliptic
             dimensionedScalar Cg5_;
 
             wallDist yw_;
-    
-      // Fields
+
+        // Fields
+
             volSymmTensorField R_;
             volScalarField k_;
             volScalarField epsilon_;
 
-        // Private member functions
-        tmp<volTensorField> symm2full(volSymmTensorField& symm ) const;
+    // Protected member functions
+
+        tmp<volTensorField> symm2full(volSymmTensorField& symm) const;
+
         tmp<volScalarField> T() const;
+
         tmp<volScalarField> L() const;
 
 public:
@@ -168,7 +173,7 @@ public:
         //- Return the turbulence viscosity
         virtual tmp<volScalarField> nut() const
         {
-            return CmuKE_*sqr(k_)/(epsilon_ + epsilonSmall_);;
+            return CmuKE_*sqr(k_)/(epsilon_ + epsilonSmall_);
         }
 
         //- Return the turbulence kinetic energy

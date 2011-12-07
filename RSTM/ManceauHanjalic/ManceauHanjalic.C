@@ -113,22 +113,22 @@ void ManceauHanjalic::correct()
     volScalarField fa = pow(alpha_, 2);
 
     volScalarField C1Modify = 1.0 + 0.03*(1.0 - fa)
-        * sqrt
+      * sqrt
         (
-            max(k_/ max((R_ && nn), k0_), VSMALL)
-        ); 
+            max(k_/max((R_ && nn), k0_), VSMALL)
+        );
 
-    // Dissipation equation 
+    // Dissipation equation
     tmp<fvScalarMatrix> epsEqn
     (
         fvm::ddt(epsilon_)
-        + fvm::div(phi_, epsilon_)
-        - fvm::Sp(fvc::div(phi_), epsilon_)
-        - fvm::laplacian(Cmu_/sigmaEps_ * T_ * R_ + nu()*I, epsilon_)
-        // - fvm::laplacian(DepsilonEff(), epsilon_)
+      + fvm::div(phi_, epsilon_)
+      - fvm::Sp(fvc::div(phi_), epsilon_)
+      - fvm::laplacian(Cmu_/sigmaEps_*T_*R_ + nu()*I, epsilon_)
+   // - fvm::laplacian(DepsilonEff(), epsilon_)
       ==
-        C1_ * G/T_ * C1Modify
-        - fvm::Sp(C2_/T_, epsilon_)
+        C1_*G/T_*C1Modify
+      - fvm::Sp(C2_/T_, epsilon_)
     );
 
     epsEqn().relax();
@@ -139,73 +139,76 @@ void ManceauHanjalic::correct()
 
     // wall contribution of pressure strain (weight included). Note:
     // repeated typo in Eqs. (9) and (A.10) in (Manceau & Hanjalic 2002)
-    volSymmTensorField psw =  (-5.0) * (1.0-fa) * epsilon_ / k_ *
-        ( 
-            twoSymm(R_ & nn) 
-            - 0.5 * (R_ && nn) * (nn + I)
+    volSymmTensorField psw =
+      - 5.0*(1.0 - fa)*epsilon_/k_
+      * (
+            twoSymm(R_ & nn) - 0.5*(R_ && nn)*(nn + I)
         );
 
-    // used LRR-IP as default; SSG is also option.    
+    // used LRR-IP as default; SSG is also option.
     volScalarField imSrc = Clrr1_*fa*epsilon_/k_;
-    volSymmTensorField exSrc = (Clrr1_ * twoThirdsI) * fa * epsilon_ - fa * Clrr2_*dev(P);
-    
-    if(SSG_) // SSG model. Disabled by default
+    volSymmTensorField exSrc =
+        (Clrr1_*twoThirdsI)*fa*epsilon_ - fa*Clrr2_*dev(P);
+
+    if (SSG_) // SSG model. Disabled by default
     {
-        volSymmTensorField bij("bij", 0.5 * dev(R_/k_));
+        volSymmTensorField bij("bij", 0.5*dev(R_/k_));
         volTensorField fbij(symm2full(bij));
-        volTensorField     gradU = fvc::grad(U_);
+        volTensorField gradU = fvc::grad(U_);
         volSymmTensorField Sij("Sij", dev(symm(gradU)));
         volTensorField fSij(symm2full(Sij));
-        volTensorField     Wij =  skew(gradU);
+        volTensorField Wij = skew(gradU);
 
-        imSrc = 0.5 * fa * (Cg1_ / T_ + Cg1s_ * G / k_);
-        exSrc = fa *
-            (  (Cg1_ * k_ / T_ + Cg1s_ * G) * oneThirdI
-            +    Cg2_ * k_/T_ * dev(symm(fbij & fbij))
-            +   (Cg3_ - Cg3s_ * sqrt(bij && bij)) * k_ * Sij
-            +    Cg4_ * k_ * dev( twoSymm(fbij & fSij) )
-            +    Cg5_ * k_ *   twoSymm(fbij & Wij) );
+        imSrc = 0.5*fa*(Cg1_/T_ + Cg1s_*G/k_);
+        exSrc = fa
+          * (
+                (Cg1_*k_/T_ + Cg1s_*G)*oneThirdI
+              + Cg2_*k_/T_*dev(symm(fbij & fbij))
+              + (Cg3_ - Cg3s_*sqrt(bij && bij))*k_*Sij
+              + Cg4_*k_*dev(twoSymm(fbij & fSij))
+              + Cg5_*k_*twoSymm(fbij & Wij)
+            );
     }
-    
+
     // Reynolds stress equation
     tmp<fvSymmTensorMatrix> REqn
         (
             fvm::ddt(R_)
-            + fvm::div(phi_, R_)
-            - fvm::Sp(fvc::div(phi_), R_)
-            - fvm::laplacian(Cmu_*T_*R_+nu()*I, R_)         // Daly-Harlow diffusion model
-            //  - fvm::laplacian(DREff(), R_)             // isotropized diffusion
-            + fvm::Sp(imSrc, R_)                      // pressure-rate-of-strain, implicit (RHS) source
-            + fvm::Sp((1-fa)*epsilon_/k_, R_)         // wall contribution of epsilon
-            ==                                        // ==
-            P                                         // production tensor
-            - twoThirdsI * epsilon_ * fa              // homogeneous contribution of epsilon
-            + exSrc                                   // pressure-rate-of-strain, explicit (LHS) source
-            + psw                                     // pressure-rate-of-strain, wall contribution
+          + fvm::div(phi_, R_)
+          - fvm::Sp(fvc::div(phi_), R_)
+          - fvm::laplacian(Cmu_*T_*R_ + nu()*I, R_) // Daly-Harlow diffusion model
+      //  - fvm::laplacian(DREff(), R_)       // isotropized diffusion
+          + fvm::Sp(imSrc, R_)                // pressure-rate-of-strain, implicit (RHS) source
+          + fvm::Sp((1 - fa)*epsilon_/k_, R_) // wall contribution of epsilon
+          ==                                  // ==
+            P                                 // production tensor
+          - twoThirdsI*epsilon_*fa            // homogeneous contribution of epsilon
+          + exSrc                             // pressure-rate-of-strain, explicit (LHS) source
+          + psw                               // pressure-rate-of-strain, wall contribution
         );
 
     REqn().relax();
     solve(REqn);
-    
+
     R_.max
     (
-    dimensionedSymmTensor
+        dimensionedSymmTensor
+        (
+            "zero",
+            R_.dimensions(),
+            symmTensor
             (
-                "zero",
-                R_.dimensions(),
-                symmTensor
-                (
-                    k0_.value(), -GREAT, -GREAT,
-                    k0_.value(), -GREAT,
-                    k0_.value()
-                )
-           )
+                k0_.value(), -GREAT, -GREAT,
+                k0_.value(), -GREAT,
+                k0_.value()
+            )
+       )
     );
 
     k_ = 0.5*tr(R_);
 
     bound(k_, k0_);
-    
+
     volScalarField L_ = L();
     T_ = T(); // re-compute time scale
 
@@ -214,14 +217,14 @@ void ManceauHanjalic::correct()
         fvm::laplacian(alpha_)
      ==
         fvm::Sp(1.0/sqr(L_), alpha_)
-        - scalar(1.0)/( sqr(L_) )
+      - scalar(1.0)/(sqr(L_))
     );
-    
+
     alphaEqn().relax();
     solve(alphaEqn);
 
     // Finally, re-calculate turbulent viscosity according to V2F model
-    // nut_ = 2.0/3.0 * Cmu_ * max((R_ && nn), k0_) * T_;
+    // nut_ = 2.0/3.0*Cmu_*max((R_ && nn), k0_)*T_;
 }
 
 

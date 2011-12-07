@@ -270,26 +270,37 @@ GenElliptic::GenElliptic
 
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
+
+
 // construct a tensor field out of a symmTensorField (by mirroring)
 // dot product between two symmTensor is not correctly defined in OF.
-Foam::tmp<Foam::volTensorField> GenElliptic::symm2full( volSymmTensorField& symm ) const
+Foam::tmp<Foam::volTensorField> GenElliptic::symm2full
+(
+    volSymmTensorField& symm
+) const
 {
     tmp<volTensorField> tFull
-        (  new volTensorField
+    (
+        new volTensorField
+        (
+           IOobject
            (
-               IOobject
-               (
-                   symm.name()+"FullTensor",
-                   runTime_.timeName(),
-                   mesh_,
-                   IOobject::NO_READ,
-                   IOobject::NO_WRITE
-               ),
-               symm.mesh(),
-               dimensionedTensor("DurbinEllitpic::ft", symm.dimensions(), tensor::zero),
-               symm.boundaryField().types()
-           )
-        );
+               symm.name() + "FullTensor",
+               runTime_.timeName(),
+               mesh_,
+               IOobject::NO_READ,
+               IOobject::NO_WRITE
+           ),
+           symm.mesh(),
+           dimensionedTensor
+           (
+               "DurbinEllitpic::ft",
+               symm.dimensions(),
+               tensor::zero
+           ),
+           symm.boundaryField().types()
+        )
+    );
 
     volTensorField& full = tFull();
 
@@ -312,21 +323,22 @@ tmp<volScalarField> GenElliptic::T() const
 {
     volScalarField yStar_=pow(CmuKE_,0.25)*sqrt(k_)*yw_/nu();
     return max
-        (
-            k_/(epsilon_ + epsilonSmall_),
-            pos(yStarLim_ - yStar_) * 6.0 * sqrt(nu()/(epsilon_ + epsilonSmall_))
-        );
+    (
+        k_/(epsilon_ + epsilonSmall_),
+        pos(yStarLim_ - yStar_)*6.0*sqrt(nu()/(epsilon_ + epsilonSmall_))
+    );
 }
+
 
 tmp<volScalarField> GenElliptic::L() const
 {
     volScalarField yStar_=pow(CmuKE_,0.25)*sqrt(k_)*yw_/nu();
-    return
-        CL_*max
-        (
-            pow(k_,1.5)/(epsilon_ + epsilonSmall_),
-            pos(yStarLim_ - yStar_) * CEta_ * pow(pow(nu(),3.0)/(epsilon_ + epsilonSmall_),0.25)
-        );
+    return CL_*max
+    (
+        pow(k_,1.5)/(epsilon_ + epsilonSmall_),
+        pos(yStarLim_ - yStar_)*CEta_
+      * pow(pow(nu(),3.0)/(epsilon_ + epsilonSmall_), 0.25)
+    );
 }
 
 
@@ -352,11 +364,7 @@ tmp<volSymmTensorField> GenElliptic::devReff() const
 
 tmp<fvVectorMatrix> GenElliptic::divDevReff(volVectorField& U) const
 {
-    return
-        (
-            fvc::div(R_)
-            - fvm::laplacian(nu(), U)
-        );
+    return fvc::div(R_) - fvm::laplacian(nu(), U);
 }
 
 

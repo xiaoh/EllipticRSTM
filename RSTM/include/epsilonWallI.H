@@ -59,31 +59,37 @@ Description
 
          if (isType<wallFvPatch>(curPatch))
         {
-            
-            if ((epsilon_.boundaryField()[patchi]).type() != "fixedInternalValue")
+
+            if
+            (
+                (epsilon_.boundaryField()[patchi]).type() !=
+                "fixedInternalValue"
+            )
             {
                 FatalErrorIn("boundary-condition evaluation")
                     << epsilon_.boundaryField()[patchi].type()
-                    << " is the wrong epsilon patchField type for boundary-condition on patch "
+                    << " is the wrong epsilon patchField type for"
+                    << " boundary-condition on patch "
                     << curPatch.name() << nl
                     << "    should be fixedInternalValue"
                     << exit(FatalError);
             }
-            
+
             const scalarField& nuw = nu().boundaryField()[patchi];
 
             forAll(curPatch, facei)
             {
                 label faceCelli = curPatch.faceCells()[facei];
-                
+
                 // For corner cells (with two boundary or more faces),
                 // epsilon in the near-wall cell is calculated
                 // as an average
-                
+
                 cellBoundaryFaceCount[faceCelli]++;
 
-    		    epsilon_[faceCelli] +=
-    		       2.0*nuw[facei]*k_[faceCelli]/(sqr(RASModel::y_[patchi][facei]));
+                epsilon_[faceCelli] +=
+                    2.0*nuw[facei]*k_[faceCelli]
+                  / (sqr(RASModel::y_[patchi][facei]));
             }
         }
     }

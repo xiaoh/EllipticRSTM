@@ -62,82 +62,78 @@ int main(int argc, char *argv[])
     while (runTime.loop())
     {
         Info<< "Time = " << runTime.timeName() << nl << endl;
-        
+
         #include "readPISOControls.H"
         #include "CourantNo.H"
-        
+
         // Pressure-velocity PISO corrector
 
         // Momentum predictor
-        
+
         fvVectorMatrix UEqn
-          (
-           fvm::ddt(U)
-           + fvm::div(phi, U)
-           + turbulence->divDevReff(U)
-           ==
-           flowDirection*gradP
-           );
-        
+        (
+            fvm::ddt(U)
+          + fvm::div(phi, U)
+          + turbulence->divDevReff(U)
+          ==
+            flowDirection*gradP
+        );
+
         UEqn.relax();
-        
+
         if (momentumPredictor)
-          {
+        {
             solve(UEqn == -fvc::grad(p));
-          }
-        
+        }
+
         // --- PISO loop
-        
+
         volScalarField rUA = 1.0/UEqn.A();
-        
+
         for (int corr=0; corr<nCorr; corr++)
-          {
+        {
             U = rUA*UEqn.H();
             phi = (fvc::interpolate(U) & mesh.Sf())
-              + fvc::ddtPhiCorr(rUA, U, phi);
-            
+                + fvc::ddtPhiCorr(rUA, U, phi);
+
             adjustPhi(phi, U, p);
-            
+
             // Non-orthogonal pressure corrector loop
             for (int nonOrth=0; nonOrth<=nNonOrthCorr; nonOrth++)
-              {
+            {
                 // Pressure corrector
-                
+
                 fvScalarMatrix pEqn
-                  (
-                   fvm::laplacian(rUA, p) == fvc::div(phi)
-                   );
-                
+                (
+                    fvm::laplacian(rUA, p) == fvc::div(phi)
+                );
+
                 pEqn.setReference(pRefCell, pRefValue);
-                
-                if
-                  (
-                   corr == nCorr-1
-                   && nonOrth == nNonOrthCorr
-                   )
-                  {
+
+                if (corr == nCorr-1 && nonOrth == nNonOrthCorr)
+                {
                     pEqn.solve(mesh.solver("pFinal"));
-                  }
+                }
                 else
-                  {
+                {
                     pEqn.solve();
-                  }
-                
+                }
+
                 if (nonOrth == nNonOrthCorr)
-                  {
+                {
                     phi -= pEqn.flux();
-                  }
+                }
               }
-            
+
             #include "continuityErrs.H"
-            
+
             U -= rUA*fvc::grad(p);
             U.correctBoundaryConditions();
             rUA = 1.0/UEqn.A();
-          }
+        }
 
         turbulence->correct();
-        B = (turbulence->R())();   // update residual stress;
+        B = turbulence->R()();   // update residual stress;
 
         // Correct driving force for a constant mass flow rate
 

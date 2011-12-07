@@ -27,7 +27,7 @@ Class
 
 Description
     Durbin Elliptic Relaxation Model.
-    
+
     Durbin, A Reynolds stress model for near-wall turbulence, J. Fluid
     Mech. vol 249, 1993.
 
@@ -37,33 +37,33 @@ Description
     Manceau, Wang, and Laurence. Inhomogeneity and anisotropy effects
     on the redistribution term in Reynolds-averaged Navier-Stokes
     modelling. J. Fluid Mech. vol 438, 2001.
-    
+
     The default model coefficients correspond to the following:
     @verbatim
         DurbinCoeffs
         {
-          yStarLim        5;               
-          CL              0.2;             
-          CmuKE           0.09;            
-          Clrr1           1.22;            
-          Clrr2           0.6;             
-          C1              1.44;            
-          C2              1.9;             
-          Cmu             0.23;            
-          sigmaEps        1.65;            
-          sigmaK          1.2;             
-          CEta            80;              
-          solveK          true;            
-          SSG             false;           
-          Cg1             3.4;             
-          Cg1s            1.8;             
-          Cg2             4.2;             
-          Cg3             0.8;             
-          Cg3s            1.3;             
-          Cg4             1.25;            
-          Cg5             0.4;             
-          ellipticOperatorCorrection false;
-          beta            0.083;           
+            yStarLim        5;
+            CL              0.2;
+            CmuKE           0.09;
+            Clrr1           1.22;
+            Clrr2           0.6;
+            C1              1.44;
+            C2              1.9;
+            Cmu             0.23;
+            sigmaEps        1.65;
+            sigmaK          1.2;
+            CEta            80;
+            solveK          true;
+            SSG             false;
+            Cg1             3.4;
+            Cg1s            1.8;
+            Cg2             4.2;
+            Cg3             0.8;
+            Cg3s            1.3;
+            Cg4             1.25;
+            Cg5             0.4;
+            ellipticOperatorCorrection false;
+            beta            0.083;
          }
     @endverbatim
 
@@ -87,7 +87,7 @@ namespace RASModels
 {
 
 /*---------------------------------------------------------------------------*\
-                           Class Durbin Declaration
+                            Class Durbin Declaration
 \*---------------------------------------------------------------------------*/
 
 class Durbin
@@ -96,14 +96,16 @@ class Durbin
 {
     // Private data
 
-            // coeffs related to elliptic relaxation
-            Switch  solveK_;
+        // coeffs related to elliptic relaxation
+        Switch solveK_;
 
-            Switch  ellipticOperatorCorrection_;
-            //Manceau correction related coefficient
-            dimensionedScalar beta_;
-       
-      // Fields
+        Switch ellipticOperatorCorrection_;
+
+        //Manceau correction related coefficient
+        dimensionedScalar beta_;
+
+        // Fields
+
             volSymmTensorField f_;
 public:
 

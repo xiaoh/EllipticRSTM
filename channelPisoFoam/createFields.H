@@ -26,20 +26,24 @@
         mesh
     );
 
-  volSymmTensorField B
+    volSymmTensorField B
     (
-     IOobject
-     (
-      "Rresidual",
-      runTime.timeName(),
-      mesh,
-      IOobject::NO_READ,
-      IOobject::AUTO_WRITE
-      ),
-     mesh,
-     dimensionedSymmTensor
-       ("r", dimVelocity*dimVelocity, symmTensor::zero)
-     );
+        IOobject
+        (
+            "Rresidual",
+            runTime.timeName(),
+            mesh,
+            IOobject::NO_READ,
+            IOobject::AUTO_WRITE
+        ),
+        mesh,
+        dimensionedSymmTensor
+        (
+            "r",
+            dimVelocity*dimVelocity,
+            symmTensor::zero
+        )
+    );
 
 
 #   include "createPhi.H"

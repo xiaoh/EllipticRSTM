@@ -59,35 +59,37 @@ Description
 
          if (isType<wallFvPatch>(curPatch))
         {
-            
+
             if ((f_.boundaryField()[patchi]).type() != "fixedInternalValue")
             {
                 FatalErrorIn("boundary-condition evaluation")
                     << f_.boundaryField()[patchi].type()
-                    << " is the wrong f patchField type for boundary-condition on patch "
+                    << " is the wrong f patchField type for"
+                    << " boundary-condition on patch "
                     << curPatch.name() << nl
                     << "    should be fixedInternalValue"
                     << exit(FatalError);
             }
-            
+
             const scalarField& nuw = nu().boundaryField()[patchi];
 
             forAll(curPatch, facei)
             {
                 label faceCelli = curPatch.faceCells()[facei];
-                
+
                 // For corner cells (with two boundary or more faces),
                 // f in the near-wall cell is calculated
                 // as an average
-                
+
                 cellBoundaryFaceCount[faceCelli]++;
 
-                symmTensor fbc = -20.0 * sqr(nuw[facei]) * R_[faceCelli] / epsilon_[faceCelli]
-                    /sqr(sqr(RASModel::y_[patchi][facei]));
+                symmTensor fbc =
+                  - 20.0*sqr(nuw[facei])*R_[faceCelli]/epsilon_[faceCelli]
+                  / sqr(sqr(RASModel::y_[patchi][facei]));
 
-    		    f_[faceCelli].yy() += fbc.yy();
-    		    f_[faceCelli].xy() += fbc.xy();
-    		    f_[faceCelli].yz() += fbc.yz();
+                f_[faceCelli].yy() += fbc.yy();
+                f_[faceCelli].xy() += fbc.xy();
+                f_[faceCelli].yz() += fbc.yz();
 
                 f_[faceCelli].xx() += -0.5*fbc.yy();
                 f_[faceCelli].zz() += -0.5*fbc.yy();

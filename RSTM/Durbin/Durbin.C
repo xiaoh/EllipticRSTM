@@ -57,7 +57,14 @@ Durbin::Durbin
 
     solveK_(coeffDict_.lookupOrAddDefault<Switch>("solveK", true)),
 
-    ellipticOperatorCorrection_(coeffDict_.lookupOrAddDefault<Switch>("ellipticOperatorCorrection", false)),
+    ellipticOperatorCorrection_
+    (
+        coeffDict_.lookupOrAddDefault<Switch>
+        (
+            "ellipticOperatorCorrection",
+            false
+        )
+    ),
     beta_
     (
         dimensioned<scalar>::lookupOrAddToDict
@@ -92,7 +99,10 @@ bool Durbin::read()
     if (GenElliptic::read())
     {
         solveK_.readIfPresent(word("solveK"), coeffDict());
-        ellipticOperatorCorrection_.readIfPresent(word("ellipticOperatorCorrection"), coeffDict());
+        ellipticOperatorCorrection_.readIfPresent
+        (
+            word("ellipticOperatorCorrection"), coeffDict()
+        );
         return true;
     }
     else
@@ -118,15 +128,15 @@ void Durbin::correct()
 
     #include "epsilonWallI.H" // set patch internal eps values
 
-    // Dissipation equation 
+    // Dissipation equation
     tmp<fvScalarMatrix> epsEqn
     (
         fvm::ddt(epsilon_)
         + fvm::div(phi_, epsilon_)
         - fvm::Sp(fvc::div(phi_), epsilon_)
-        - fvm::laplacian(Cmu_/sigmaEps_ * T_ * R_ + nu()*I, epsilon_)
+        - fvm::laplacian(Cmu_/sigmaEps_*T_*R_ + nu()*I, epsilon_)
       ==
-        C1_ * G/T_ * ( 1.0 + 0.1*G/epsilon_)
+        C1_*G/T_*(1.0 + 0.1*G/epsilon_)
         - fvm::Sp(C2_/T_, epsilon_)
     );
 
@@ -143,18 +153,18 @@ void Durbin::correct()
                 fvm::ddt(k_)
                 + fvm::div(phi_, k_)
                 - fvm::Sp(fvc::div(phi_), k_)
-                - fvm::laplacian(Cmu_/sigmaK_ * T_ * R_ + nu()*I, k_)
+                - fvm::laplacian(Cmu_/sigmaK_*T_*R_ + nu()*I, k_)
                 ==
                 G
                 - fvm::Sp(epsilon_/k_, k_)
             );
-        
+
         kEqn().relax();
         solve(kEqn);
     }
     else
     {
-        k_ = 0.5 * tr(R_);
+        k_ = 0.5*tr(R_);
     }
     bound(k_, k0_);
 
@@ -168,9 +178,9 @@ void Durbin::correct()
             - fvm::Sp(fvc::div(phi_), R_)
             - fvm::laplacian(Cmu_*T_*R_ + nu()*I, R_)
             + fvm::Sp(epsilon_/k_, R_)
-            ==                                        
+            ==
             P                                         // production tensor
-            + k_ * f_
+            + k_*f_
         );
 
     REqn().relax();
@@ -184,7 +194,7 @@ void Durbin::correct()
             rij.zz() = 2.0*k_.internalField()[celli] - rij.xx() - rij.yy();
         }
     }
-    
+
     R_.max // bound diagonal components of R
     (
         dimensionedSymmTensor
@@ -207,37 +217,38 @@ void Durbin::correct()
 
     if(SSG_)
     {
-        volSymmTensorField bij("bij", 0.5 * dev(R_/k_));
+        volSymmTensorField bij("bij", 0.5*dev(R_/k_));
         volTensorField fbij(symm2full(bij));
-        volTensorField     gradU = fvc::grad(U_);
+        volTensorField gradU = fvc::grad(U_);
         volSymmTensorField Sij("Sij", dev(symm(gradU)));
         volTensorField fSij(symm2full(Sij));
-        volTensorField     Wij =  skew(gradU);
-        
-        exSrc = -(Cg1_ * k_/T_ + Cg1s_ * G) * bij
-            +    Cg2_ * k_/T_ * dev(symm(fbij & fbij))
-            +   (Cg3_ - Cg3s_ * sqrt(bij && bij)) * k_ * Sij
-            +    Cg4_ * k_ * dev( twoSymm(fbij & fSij) )
-            +    Cg5_ * k_ * (twoSymm(fbij & Wij )) ;
+        volTensorField Wij = skew(gradU);
+
+        exSrc =
+          - (Cg1_*k_/T_ + Cg1s_*G)*bij
+          + Cg2_*k_/T_*dev(symm(fbij & fbij))
+          + (Cg3_ - Cg3s_*sqrt(bij && bij))*k_*Sij
+          + Cg4_*k_*dev(twoSymm(fbij & fSij))
+          + Cg5_*k_*(twoSymm(fbij & Wij)) ;
     }
-    
-    
+
+
     tmp<fvSymmTensorMatrix> fEqn
-        (
-            fvm::laplacian(f_)
-            ==
-            fvm::Sp(1.0/sqr(L_), f_)
-            -
-            (
-                exSrc/k_ + dev(R_)/(k_*T_)
-            ) / sqr(L_)
-            );
+    (
+        fvm::laplacian(f_)
+      ==
+        fvm::Sp(1.0/sqr(L_), f_)
+      - (
+            exSrc/k_ + dev(R_)/(k_*T_)
+        )/sqr(L_)
+    );
 
     if(ellipticOperatorCorrection_)
     {
         volVectorField gradL = fvc::grad(L_);
 
-        volSymmTensorField LdF(        
+        volSymmTensorField LdF
+        (
             IOobject
             (
                 "LnF",
@@ -247,18 +258,25 @@ void Durbin::correct()
                 IOobject::NO_WRITE
             ),
             mesh_,
-            dimensionedSymmTensor("Ldf::zero", dimensionSet(0, -1, -1, 0, 0), symmTensor::zero)
+            dimensionedSymmTensor
+            (
+                "Ldf::zero",
+                dimensionSet(0, -1, -1, 0, 0),
+                symmTensor::zero
+            )
         );
-        
-        for(label compi=0; compi<6; compi++)
+
+        for (label compi=0; compi<6; compi++)
         {
             volScalarField fcomp = f_.component(compi);
             LdF.replace(compi, gradL & fvc::grad(fcomp));
         }
         // Append the correction terms. (note == above is equivalent to -)
-        fEqn() -= fvm::Sp((16.0*beta_*magSqr(gradL))/sqr(L_), f_) - 8.0*beta_* LdF/L_;
+        fEqn() -=
+            fvm::Sp((16.0*beta_*magSqr(gradL))/sqr(L_), f_)
+          - 8.0*beta_* LdF/L_;
     }
-    
+
     fEqn().relax();
     fEqn().boundaryManipulate(f_.boundaryField());
     solve(fEqn);

@@ -26,41 +26,41 @@ Class
     Foam::incompressible::RASModels::ManceauHanjalic
 
 Description
-
     Elliptic blending model based on Manceau and Hanjalic (2002).
+
     Implementation: Heng Xiao (xiaoheng2011@gmail.com)
-    Reivew: Michael Wild
+    Review: Michael Wild
     Bug report and comments to: HX.
 
     Part of the code is borrowed from the LRR model implentation in OF
     distribution and from the V2F model implementation.
-    
+
     The basic idea of the model is according to:
 
     Manceau and Hanjalic, Elliptic blending model: a new
     near-wall Reynolds-stress turbulence closure. Physics of Fluids 14
     (74), 2002.
-    
+
     However, the implementation follows the modified version in
-   
+
     Thielen et al., Prediction of flow and heat transfer in multiple
     impinging jets with an elliptic-blending second moment closure.
     Int. J. Heat and Mass Transfer, vol 48 (8), 2004.
 
     The default model coefficients correspond to the following:
     @verbatim
-        ManceauHanjalicCoeffs
+    ManceauHanjalicCoeffs
     {
         CmuKE           0.09;
         Clrr1           1.22;
-        Clrr2           0.6; 
+        Clrr2           0.6;
         C1              1.44;
         C2              1.85;
         Cmu             0.22;
-        sigmaEps        1.65; 
+        sigmaEps        1.65;
         CL              0.28; // one should use 0.161 instead.
-        CEta            80; 
-        yStarLim        5;   
+        CEta            80;
+        yStarLim        5;
         SSG             false;
         Cg1             3.4;  // Cg1-5 effective if SSG is turned on.
         Cg1s            1.8;
@@ -68,7 +68,7 @@ Description
         Cg3             0.8;
         Cg3s            1.3;
         Cg4             1.25;
-        Cg5             0.4; 
+        Cg5             0.4;
     }
     @endverbatim
 
@@ -92,7 +92,7 @@ namespace RASModels
 {
 
 /*---------------------------------------------------------------------------*\
-                           Class ManceauHanjalic Declaration
+                       Class ManceauHanjalic Declaration
 \*---------------------------------------------------------------------------*/
 
 class ManceauHanjalic
@@ -100,7 +100,9 @@ class ManceauHanjalic
     public GenElliptic
 {
     // Private data
-      // Fields
+
+        // Fields
+
             volScalarField alpha_;
 
 public:
