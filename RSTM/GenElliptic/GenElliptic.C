@@ -277,7 +277,7 @@ tmp<GeometricField<Tensor<Cmpt>, PatchField, GeoMesh> >
 GenElliptic::symm2full
 (
     GeometricField<SymmTensor<Cmpt>, PatchField, GeoMesh>& symm
-) const
+)
 {
     typedef GeometricField<Tensor<Cmpt>, PatchField, GeoMesh> FieldType;
     tmp<FieldType> tFull
@@ -287,8 +287,8 @@ GenElliptic::symm2full
            IOobject
            (
                symm.name() + "FullTensor",
-               runTime_.timeName(),
-               mesh_,
+               symm.mesh().time().timeName(),
+               symm.mesh(),
                IOobject::NO_READ,
                IOobject::NO_WRITE
            ),

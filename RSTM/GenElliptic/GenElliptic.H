@@ -148,11 +148,11 @@ protected:
         // The dot product between two SymmTensor is not correctly defined in
         // SymmTensorI.H.
         template<class Cmpt, template<class> class PatchField, class GeoMesh>
-        tmp<GeometricField<Tensor<Cmpt>, PatchField, GeoMesh> >
+        static tmp<GeometricField<Tensor<Cmpt>, PatchField, GeoMesh> >
         symm2full
         (
             GeometricField<SymmTensor<Cmpt>, PatchField, GeoMesh>& symm
-        ) const;
+        );
 
         tmp<volScalarField> T() const;
 
