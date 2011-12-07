@@ -272,16 +272,17 @@ GenElliptic::GenElliptic
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
 
-// construct a tensor field out of a symmTensorField (by mirroring)
-// dot product between two symmTensor is not correctly defined in OF.
-Foam::tmp<Foam::volTensorField> GenElliptic::symm2full
+template<class Cmpt, template<class> class PatchField, class GeoMesh>
+tmp<GeometricField<Tensor<Cmpt>, PatchField, GeoMesh> >
+GenElliptic::symm2full
 (
-    volSymmTensorField& symm
+    GeometricField<SymmTensor<Cmpt>, PatchField, GeoMesh>& symm
 ) const
 {
-    tmp<volTensorField> tFull
+    typedef GeometricField<Tensor<Cmpt>, PatchField, GeoMesh> FieldType;
+    tmp<FieldType> tFull
     (
-        new volTensorField
+        new FieldType
         (
            IOobject
            (
@@ -292,28 +293,23 @@ Foam::tmp<Foam::volTensorField> GenElliptic::symm2full
                IOobject::NO_WRITE
            ),
            symm.mesh(),
-           dimensionedTensor
-           (
-               "DurbinEllitpic::ft",
-               symm.dimensions(),
-               tensor::zero
-           ),
+           dimensionedTensor("0", symm.dimensions(), Tensor<Cmpt>::zero),
            symm.boundaryField().types()
         )
     );
 
-    volTensorField& full = tFull();
+    FieldType& full = tFull();
 
     // manipulate components
-    full.replace(tensor::XX, symm.component(symmTensor::XX));
-    full.replace(tensor::YY, symm.component(symmTensor::YY));
-    full.replace(tensor::ZZ, symm.component(symmTensor::ZZ));
-    full.replace(tensor::XY, symm.component(symmTensor::XY));
-    full.replace(tensor::YZ, symm.component(symmTensor::YZ));
-    full.replace(tensor::XZ, symm.component(symmTensor::XZ));
-    full.replace(tensor::ZX, symm.component(symmTensor::XZ));
-    full.replace(tensor::YX, symm.component(symmTensor::XY));
-    full.replace(tensor::ZY, symm.component(symmTensor::YZ));
+    full.replace(Tensor<Cmpt>::XX, symm.component(SymmTensor<Cmpt>::XX));
+    full.replace(Tensor<Cmpt>::YY, symm.component(SymmTensor<Cmpt>::YY));
+    full.replace(Tensor<Cmpt>::ZZ, symm.component(SymmTensor<Cmpt>::ZZ));
+    full.replace(Tensor<Cmpt>::XY, symm.component(SymmTensor<Cmpt>::XY));
+    full.replace(Tensor<Cmpt>::YZ, symm.component(SymmTensor<Cmpt>::YZ));
+    full.replace(Tensor<Cmpt>::XZ, symm.component(SymmTensor<Cmpt>::XZ));
+    full.replace(Tensor<Cmpt>::ZX, symm.component(SymmTensor<Cmpt>::XZ));
+    full.replace(Tensor<Cmpt>::YX, symm.component(SymmTensor<Cmpt>::XY));
+    full.replace(Tensor<Cmpt>::ZY, symm.component(SymmTensor<Cmpt>::YZ));
 
     return tFull;
 }

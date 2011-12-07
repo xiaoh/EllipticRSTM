@@ -144,7 +144,15 @@ protected:
 
     // Protected member functions
 
-        tmp<volTensorField> symm2full(volSymmTensorField& symm) const;
+        //- Construct a tensor field out of a symmTensorField
+        // The dot product between two SymmTensor is not correctly defined in
+        // SymmTensorI.H.
+        template<class Cmpt, template<class> class PatchField, class GeoMesh>
+        tmp<GeometricField<Tensor<Cmpt>, PatchField, GeoMesh> >
+        symm2full
+        (
+            GeometricField<SymmTensor<Cmpt>, PatchField, GeoMesh>& symm
+        ) const;
 
         tmp<volScalarField> T() const;
 
