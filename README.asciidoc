@@ -3,7 +3,7 @@ Implementation of two RSTM with elliptic relaxation models
 Heng Xiao <xiaoheng2011@gmail.com>
 
 Implementation: Heng Xiao +
-Review: Michael Wild +
+Review and Improvement: Michael Wild +
 Bug reports and comments to: Heng Xiao
 
 The following RSTM models are implemented:

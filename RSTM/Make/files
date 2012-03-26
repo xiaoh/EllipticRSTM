@@ -3,4 +3,4 @@ Durbin/Durbin.C
 ManceauHanjalic/ManceauHanjalic.C
 
 
-LIB = $(FOAM_USER_LIBBIN)/libincompressibleRSTM
+LIB = $(FOAM_USER_LIBBIN)/libincompressibleRSTMElliptic

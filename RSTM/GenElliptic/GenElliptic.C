@@ -26,6 +26,8 @@ License
 
 #include "GenElliptic.H"
 #include "wallFvPatch.H"
+#include "wallDistData.H"
+#include "wallPointYPlus.H"
 #include "gaussLaplacianScheme.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
@@ -134,7 +136,7 @@ GenElliptic::GenElliptic
         (
             "CL",
             coeffDict_,
-            0.2
+            0.25
         )
     ),
     CEta_
@@ -155,6 +157,7 @@ GenElliptic::GenElliptic
             5.0
         )
     ),
+    implicitDiv_(coeffDict_.lookupOrAddDefault<Switch>("implicitDiv", false)),
 
     SSG_(coeffDict_.lookupOrAddDefault<Switch>("SSG", false)),
     Cg1_
@@ -227,7 +230,20 @@ GenElliptic::GenElliptic
         )
     ),
 
-    yw_(mesh_),
+    KolmogorovFlag_
+    (
+        IOobject
+        (
+            "KolmogorovFlag",
+            runTime_.timeName(),
+            mesh_,
+            IOobject::NO_READ,
+            IOobject::AUTO_WRITE
+        ),
+        mesh_,
+        dimensionedScalar("kolflag", dimless, 1.0)
+    ),
+
     R_
     (
         IOobject
@@ -270,71 +286,108 @@ GenElliptic::GenElliptic
 
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
-
-
-template<class Cmpt, template<class> class PatchField, class GeoMesh>
-tmp<GeometricField<Tensor<Cmpt>, PatchField, GeoMesh> >
-GenElliptic::symm2full
-(
-    GeometricField<SymmTensor<Cmpt>, PatchField, GeoMesh>& symm
-)
+// construct a tensor field out of a symmTensorField (by mirroring)
+// dot product between two symmTensor is not correctly defined in OF.
+Foam::tmp<Foam::volTensorField> GenElliptic::symm2full( volSymmTensorField& symm ) const
 {
-    typedef GeometricField<Tensor<Cmpt>, PatchField, GeoMesh> FieldType;
-    tmp<FieldType> tFull
-    (
-        new FieldType
-        (
-           IOobject
+    tmp<volTensorField> tFull
+        (  new volTensorField
            (
-               symm.name() + "FullTensor",
-               symm.mesh().time().timeName(),
+               IOobject
+               (
+                   symm.name()+"FullTensor",
+                   runTime_.timeName(),
+                   mesh_,
+                   IOobject::NO_READ,
+                   IOobject::NO_WRITE
+               ),
                symm.mesh(),
-               IOobject::NO_READ,
-               IOobject::NO_WRITE
-           ),
-           symm.mesh(),
-           dimensionedTensor("0", symm.dimensions(), Tensor<Cmpt>::zero),
-           symm.boundaryField().types()
-        )
-    );
+               dimensionedTensor("DurbinEllitpic::ft", symm.dimensions(), tensor::zero),
+               symm.boundaryField().types()
+           )
+        );
 
-    FieldType& full = tFull();
+    volTensorField& full = tFull();
 
     // manipulate components
-    full.replace(Tensor<Cmpt>::XX, symm.component(SymmTensor<Cmpt>::XX));
-    full.replace(Tensor<Cmpt>::YY, symm.component(SymmTensor<Cmpt>::YY));
-    full.replace(Tensor<Cmpt>::ZZ, symm.component(SymmTensor<Cmpt>::ZZ));
-    full.replace(Tensor<Cmpt>::XY, symm.component(SymmTensor<Cmpt>::XY));
-    full.replace(Tensor<Cmpt>::YZ, symm.component(SymmTensor<Cmpt>::YZ));
-    full.replace(Tensor<Cmpt>::XZ, symm.component(SymmTensor<Cmpt>::XZ));
-    full.replace(Tensor<Cmpt>::ZX, symm.component(SymmTensor<Cmpt>::XZ));
-    full.replace(Tensor<Cmpt>::YX, symm.component(SymmTensor<Cmpt>::XY));
-    full.replace(Tensor<Cmpt>::ZY, symm.component(SymmTensor<Cmpt>::YZ));
+    full.replace(tensor::XX, symm.component(symmTensor::XX));
+    full.replace(tensor::YY, symm.component(symmTensor::YY));
+    full.replace(tensor::ZZ, symm.component(symmTensor::ZZ));
+    full.replace(tensor::XY, symm.component(symmTensor::XY));
+    full.replace(tensor::YZ, symm.component(symmTensor::YZ));
+    full.replace(tensor::XZ, symm.component(symmTensor::XZ));
+    full.replace(tensor::ZX, symm.component(symmTensor::XZ));
+    full.replace(tensor::YX, symm.component(symmTensor::XY));
+    full.replace(tensor::ZY, symm.component(symmTensor::YZ));
 
     return tFull;
 }
 
 
-tmp<volScalarField> GenElliptic::T() const
+void GenElliptic::updateKolmogorovFlag()
 {
-    volScalarField yStar_=pow(CmuKE_,0.25)*sqrt(k_)*yw_/nu();
-    return max
+    // wall unit as defined by nu/sqrt(tauw/rho)
+    volScalarField ystar
     (
-        k_/(epsilon_ + epsilonSmall_),
-        pos(yStarLim_ - yStar_)*6.0*sqrt(nu()/(epsilon_ + epsilonSmall_))
+        IOobject
+        (
+            "ystar",
+            mesh_.time().constant(),
+            mesh_
+        ),
+        mesh_,
+        dimensionedScalar("ystar", dimLength, 1.0)
     );
+
+    const fvPatchList& patches = mesh_.boundary();
+    forAll(patches, patchi)
+    {
+        if (isA<wallFvPatch>(patches[patchi]))
+        {
+            const fvPatchVectorField& Uw = U_.boundaryField()[patchi];
+            const scalarField& nuw = nu().boundaryField()[patchi];
+            // Note: nuw is used instead of nueff
+            // for wall-resolving mesh, nut should be zero at wall
+            ystar.boundaryField()[patchi] =
+                nuw/sqrt(nuw*mag(Uw.snGrad()) + VSMALL);
+        }
+    }
+
+    wallPointYPlus::yPlusCutOff = 500;
+    wallDistData<wallPointYPlus> y(mesh_, ystar);
+    
+    KolmogorovFlag_ = pos(yStarLim_ - y/ystar);
+
+    // For debug purpose only:
+    if(runTime_.outputTime())
+    {
+        volScalarField KolmogorovFlagCompare
+            (
+                "KolmogorovFlagCompare", 
+                pos(yStarLim_ - pow(CmuKE_,0.25)*sqrt(k_)*y/nu() )
+            );
+        KolmogorovFlagCompare.write();
+    }
+
 }
 
+tmp<volScalarField> GenElliptic::T() const
+{
+    return max
+        (
+            k_/(epsilon_ + epsilonSmall_),
+            KolmogorovFlag_ * 6.0 * sqrt(nu()/(epsilon_ + epsilonSmall_))
+        );
+}
 
 tmp<volScalarField> GenElliptic::L() const
 {
-    volScalarField yStar_=pow(CmuKE_,0.25)*sqrt(k_)*yw_/nu();
-    return CL_*max
-    (
-        pow(k_,1.5)/(epsilon_ + epsilonSmall_),
-        pos(yStarLim_ - yStar_)*CEta_
-      * pow(pow(nu(),3.0)/(epsilon_ + epsilonSmall_), 0.25)
-    );
+    return
+        CL_*max
+        (
+            pow(k_,1.5)/(epsilon_ + epsilonSmall_),
+            KolmogorovFlag_ * CEta_ * pow(pow(nu(),3.0)/(epsilon_ + epsilonSmall_),0.25)
+        );
 }
 
 
@@ -360,7 +413,29 @@ tmp<volSymmTensorField> GenElliptic::devReff() const
 
 tmp<fvVectorMatrix> GenElliptic::divDevReff(volVectorField& U) const
 {
-    return fvc::div(R_) - fvm::laplacian(nu(), U);
+    if(implicitDiv_)
+    {
+        return
+            (
+                fvc::div(R_)
+                + fvc::laplacian(nut(), U, "laplacian(nuEff,U)")
+                - fvm::laplacian(nuEff(), U)
+            );
+    }
+    else
+    {
+        return
+            (
+                fvc::div(R_)
+                - fvm::laplacian(nu(), U)
+            );
+    }
+}
+
+
+void GenElliptic::correct()
+{
+    updateKolmogorovFlag();
 }
 
 
